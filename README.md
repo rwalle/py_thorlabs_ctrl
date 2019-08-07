@@ -67,7 +67,7 @@ Currently supports `KCubeDCServo`, `TCubeDCServo` and `TCubeStepper`.
 
 `motor.home()`
 
-### move with a relative distance
+### move with a relative distance (this function and the following one both return immediately. May provide a locked version later)
 
 `motor.move_relative(distance)`
 
