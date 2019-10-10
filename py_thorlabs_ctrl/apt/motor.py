@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__name__)
+
 
 class Motor:
 
@@ -49,6 +52,8 @@ class Motor:
         return bool((status >> HOMED_BIT) % 2)
         
     def home(self):
+
+        logger.info("motor move to home position")
     
         device = self.get_device()
         device.MoveHome(0, 0)
@@ -61,6 +66,9 @@ class Motor:
         return pos
 
     def move_relative(self, dis):
+
+        logger.info("motor move with relative distance %.2f" % dis)
+
         device = self.get_device()
 
         move_str = 'SetRelMoveDist(0, %.2f)' % dis
@@ -70,6 +78,7 @@ class Motor:
 
     def move_absolute(self, pos):
 
+        logger.info("motor move to absolute position %.2f" % pos)
 
         device = self.get_device()
 
