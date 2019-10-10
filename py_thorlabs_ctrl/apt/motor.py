@@ -1,4 +1,3 @@
-print('Untested. Use at your own risk')
 
 class Motor:
 
@@ -6,13 +5,16 @@ class Motor:
     For use with legacy (APT) ActiveX controls in Qt (i.e. PyQt5 -- activeQt, QAxWidget)
     """
 
+    serial_number = ''
+    device = None
+
     def __init__(self, serial_number):
-        self.serial_number = serial_number
+        self.serial_number = str(serial_number)
         
     def set_activex_ctrl(self, ctrl):
 
-        ctrl.setControl("MGMOTOR.MGMotorCtrl.1")
-        ctrl.setProperty("HWSerialNum", serial_number)
+        ctrl.setControl('MGMOTOR.MGMotorCtrl.1')
+        ctrl.setProperty('HWSerialNum', self.serial_number)
 
         self.device = ctrl
 
@@ -23,7 +25,7 @@ class Motor:
         try:
             device = self.device
         except AttributeError:
-            print('device not created!')
+            print("device not created!")
             raise
 
         return device
@@ -31,7 +33,12 @@ class Motor:
     def enable(self):
         device = self.get_device()
 
-        device.dynamicCall("StartCtrl")
+        device.dynamicCall('StartCtrl')
+
+    def disable(self):
+        device = self.get_device()
+        
+        device.dynamicCall('StopCtrl')
         
     def is_homed(self):
     
@@ -39,7 +46,7 @@ class Motor:
         
         device = self.get_device()
         status = device.GetStatusBits_Bits(0) + 1 << 31
-        return bool((status >> BIT) % 2)
+        return bool((status >> HOMED_BIT) % 2)
         
     def home(self):
     
@@ -49,28 +56,26 @@ class Motor:
     def get_position(self):
         device = self.get_device()
 
-        pos = float(device.dynamicCall("GetPosition_Position(0)"))
+        pos = float(device.dynamicCall('GetPosition_Position(0)'))
 
         return pos
 
     def move_relative(self, dis):
         device = self.get_device()
 
-        move_str = "SetRelMoveDist(0, %.2f)" % dis
+        move_str = 'SetRelMoveDist(0, %.2f)' % dis
 
         device.dynamicCall(move_str)
         device.dynamicCall("MoveRelative(0, false)")
 
     def move_absolute(self, pos):
-        device = self.get_device()
-
-        move_str = "SetAbsMovePos(0, %.2f)" % pos
 
         device.dynamicCall(move_str)
         device.dynamicCall("MoveAbsolute(0, false)")
 
-    def disconnect(self):
         device = self.get_device()
 
-        device.dynamicCall("StopCtrl")
-        
+        move_str = 'SetAbsMovePos(0, %.2f)' % pos
+
+        device.dynamicCall(move_str)
+        device.dynamicCall('MoveAbsolute(0, false)')
