@@ -70,8 +70,6 @@ class Motor:
 
     def move_absolute(self, pos):
 
-        device.dynamicCall(move_str)
-        device.dynamicCall("MoveAbsolute(0, false)")
 
         device = self.get_device()
 
