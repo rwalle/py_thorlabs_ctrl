@@ -1,5 +1,6 @@
 import py_thorlabs_ctrl.kinesis
 import clr, time
+import numpy as np
 
 POLLING_INTERVAL = 250
 ENABLE_SLEEP_TIME = 0.1
@@ -8,6 +9,7 @@ py_thorlabs_ctrl.kinesis.check_import()
   
 from System import String
 from System import Decimal
+from System import Enum
 
 clr.AddReference('System.Collections')
    
@@ -17,6 +19,10 @@ clr.AddReference("Thorlabs.MotionControl.DeviceManagerCLI")
 import Thorlabs.MotionControl.DeviceManagerCLI
 from Thorlabs.MotionControl.DeviceManagerCLI import DeviceManagerCLI
 import Thorlabs.MotionControl.GenericMotorCLI
+
+class MotorDirection(Enum):
+    Forward=1
+    Backward=2
 
 class Motor:
 
@@ -91,6 +97,19 @@ class Motor:
     
         device = self.get_device()
         device.Home(0)
+    def stop(self):
+        device = self.get_device()
+        device.Stop(0)
+
+
+    def velocity(self,vel):
+        device = self.get_device()
+        if vel < 0:
+            device.MoveContinuousAtVelocity(MotorDirection.Backward,abs(vel))
+            # print('moving backward at {}'.format(vel))
+        else:
+            device.MoveContinuousAtVelocity(MotorDirection.Forward,abs(vel))
+            # print('moving forward at {}'.format(vel))
 
     def move_relative(self, dis):
         device = self.get_device()
