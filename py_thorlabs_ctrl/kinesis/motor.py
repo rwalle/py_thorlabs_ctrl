@@ -74,29 +74,50 @@ class Motor:
         return device_info.Name
 
     def get_position(self):
-    
         device = self.get_device()
-
+        print(type(Decimal.ToDouble(device.DevicePosition)))
         return Decimal.ToDouble(device.DevicePosition)
+
+    def get_max_velocity_du(self):
+        device = self.get_device()
+        params = device.GetVelocityParams_DeviceUnit()
+        return params.MaxVelocity
+
+    def mm_to_du(self):  # unsure whether this is a constant for all motors, but this method may not work for all devices
+        device = self.get_device()
+        print("original type: {}".format(type(device.GetMoveAbsolutePosition())))
+        print("to double: {}".format(type(Decimal.ToDouble(device.GetMoveAbsolutePosition()))))
+        print("int: {}".format(type(int(Decimal.ToDouble(device.GetMoveAbsolutePosition())))))
+        return int(Decimal.ToDouble(device.GetMoveAbsolutePosition()))
+        # return int(Decimal.ToDouble(device.GetMoveAbsolutePosition_DeviceUnit()))/int(Decimal.ToDouble(device.GetMoveAbsolutePosition()))
+
+    def get_position_du(self):
+        device = self.get_device()
+        return device.GetPositionCounter()
+
+    def print_velocity(self):
+        device = self.get_device()
+        real_params = device.GetVelocityParams() # velocity parameters in real units (mm)
+        device_params = device.GetVelocityParams_DeviceUnit() # velocity parameters in device units 
+        print("velocity (real world units): {}".format(Decimal.ToDouble(real_params.MaxVelocity)))
+        print("velocity (device units: {}".format(device_params.MaxVelocity))
+        print("conversion: {}".format(device_params.MaxVelocity/Decimal.ToDouble(real_params.MaxVelocity)))
         
     def set_velocity(self, max_velocity = None, acceleration = None):
-        
         device = self.get_device()
-        velocity_params = device.GetVelocityParams()
+        params = device.GetVelocityParams()
         max_velocity = Decimal.ToDouble(params.MaxVelocity) if max_velocity == None else max_velocity
         acceleration = Decimal.ToDouble(params.Acceleration) if acceleration == None else acceleration
-        
         device.SetVelocityParams(Decimal(max_velocity), Decimal(acceleration))
         
     def is_homed(self):
-    
         device = self.get_device()
         return device.Status.IsHomed
         
     def home(self):
-    
         device = self.get_device()
         device.Home(0)
+
     def stop(self):
         device = self.get_device()
         device.Stop(0)
