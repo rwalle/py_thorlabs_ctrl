@@ -224,3 +224,4 @@ class TCubeStepper(TCubeMotor):
         
         DeviceManagerCLI.BuildDeviceList()
         self.device = TCubeStepper.CreateTCubeStepper(self.serial_number)
+        arbitrary_change = 0
