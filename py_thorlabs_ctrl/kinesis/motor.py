@@ -75,7 +75,10 @@ class Motor:
 
     def get_position(self):
         device = self.get_device()
-        print(type(Decimal.ToDouble(device.DevicePosition)))
+        print("GetPositionCounter: {}".format(device.GetPositionCounter))        
+        print("DevicePosition: {}".format(device.DevicePosition))
+        print("Position: {}".format(device.Position))
+        print("Position_DeviceUnit: {}".format(int(device.Position_DeviceUnit)))
         return Decimal.ToDouble(device.DevicePosition)
 
     def get_max_velocity_du(self):
@@ -85,11 +88,7 @@ class Motor:
 
     def mm_to_du(self):  # unsure whether this is a constant for all motors, but this method may not work for all devices
         device = self.get_device()
-        print("original type: {}".format(type(device.GetMoveAbsolutePosition())))
-        print("to double: {}".format(type(Decimal.ToDouble(device.GetMoveAbsolutePosition()))))
-        print("int: {}".format(type(int(Decimal.ToDouble(device.GetMoveAbsolutePosition())))))
         return int(Decimal.ToDouble(device.GetMoveAbsolutePosition()))
-        # return int(Decimal.ToDouble(device.GetMoveAbsolutePosition_DeviceUnit()))/int(Decimal.ToDouble(device.GetMoveAbsolutePosition()))
 
     def get_position_du(self):
         device = self.get_device()
@@ -121,27 +120,38 @@ class Motor:
     def stop(self):
         device = self.get_device()
         device.Stop(0)
-
+    
+    def stop_immediate(self):
+        device = self.get_device()
+        device.StopImmediate()
 
     def velocity(self,vel):
         device = self.get_device()
         if vel < 0:
             device.MoveContinuousAtVelocity(MotorDirection.Backward,abs(vel))
-            # print('moving backward at {}'.format(vel))
         else:
             device.MoveContinuousAtVelocity(MotorDirection.Forward,abs(vel))
-            # print('moving forward at {}'.format(vel))
 
-    def move_relative(self, dis):
+#     def move_relative(self, dis):
+#         device = self.get_device()
+#         device.SetMoveRelativeDistance(Decimal(dis))
+#         device.MoveRelative(10)
+#
+    def move_relative(self,dis):   # using this version because i think it will let me specify a timout and the other didn't work
         device = self.get_device()
-
         device.SetMoveRelativeDistance(Decimal(dis))
-        device.MoveRelative(0)
+        if dis > 0:
+            device.MoveRelative(MotorDirection.Forward,dis,10)
+        else:
+            device.MoveRelative(MotorDirection.Backward,dis,10)
 
     def move_absolute(self, pos):
         device = self.get_device()
-
         device.MoveTo(Decimal(pos), 0)
+
+    def get_status(self):
+        device = self.get_device()
+        return device.Status.IsMoving()
         
     def disable(self):
         device = self.get_device()
@@ -149,7 +159,6 @@ class Motor:
 
     def disconnect(self):
         device = self.get_device()
-
         device.Disconnect()
 
 class KCubeMotor(Motor):
