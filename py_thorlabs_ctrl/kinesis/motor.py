@@ -127,10 +127,13 @@ class Motor:
 
     def velocity(self,vel):
         device = self.get_device()
-        if vel < 0:
-            device.MoveContinuousAtVelocity(MotorDirection.Backward,abs(vel))
-        else:
-            device.MoveContinuousAtVelocity(MotorDirection.Forward,abs(vel))
+        try:
+            if vel < 0:
+                device.MoveContinuousAtVelocity(MotorDirection.Backward,abs(vel))
+            else:
+                device.MoveContinuousAtVelocity(MotorDirection.Forward,abs(vel))
+        except Exception as e:
+            print(e)
 
 #     def move_relative(self, dis):
 #         device = self.get_device()
@@ -144,6 +147,21 @@ class Motor:
             device.MoveRelative(MotorDirection.Forward,dis,10)
         else:
             device.MoveRelative(MotorDirection.Backward,dis,10)
+
+### Idea to make the device wait to move if already moving ###
+    def move_relative(self,dis):
+        temp = True
+        device = self.get_device()
+        device.SetMoveRelativeDistance(Decimal(dis))
+        while temp == True:
+            try:
+                device.MoveRelative(0)
+                temp == False
+            except Exception as e:
+                print(e)
+### End of my idea ###
+
+
 
     def move_absolute(self, pos):
         device = self.get_device()
