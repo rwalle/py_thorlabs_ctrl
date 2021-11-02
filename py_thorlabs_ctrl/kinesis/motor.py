@@ -1,6 +1,5 @@
 import py_thorlabs_ctrl.kinesis
 import clr, time
-import numpy as np
 
 POLLING_INTERVAL = 250
 ENABLE_SLEEP_TIME = 0.1
@@ -112,7 +111,8 @@ class Motor:
     def is_homed(self):
         device = self.get_device()
         return device.Status.IsHomed
-        
+
+
     def home(self):
         device = self.get_device()
         device.Home(0)
@@ -135,20 +135,6 @@ class Motor:
         except Exception as e:
             print(e)
 
-#     def move_relative(self, dis):
-#         device = self.get_device()
-#         device.SetMoveRelativeDistance(Decimal(dis))
-#         device.MoveRelative(10)
-#
-    def move_relative(self,dis):   # using this version because i think it will let me specify a timout and the other didn't work
-        device = self.get_device()
-        device.SetMoveRelativeDistance(Decimal(dis))
-        if dis > 0:
-            device.MoveRelative(MotorDirection.Forward,dis,10)
-        else:
-            device.MoveRelative(MotorDirection.Backward,dis,10)
-
-### Idea to make the device wait to move if already moving ###
     def move_relative(self,dis):
         temp = True
         device = self.get_device()
@@ -156,16 +142,20 @@ class Motor:
         while temp == True:
             try:
                 device.MoveRelative(0)
-                temp == False
+                temp = False
+                print(temp)
             except Exception as e:
                 print(e)
-### End of my idea ###
-
-
 
     def move_absolute(self, pos):
         device = self.get_device()
-        device.MoveTo(Decimal(pos), 0)
+        temp = True
+        while temp == True:
+            try:
+                device.MoveTo(Decimal(pos),0)
+                temp = False
+            except Exception as e:
+                print(e)
 
     def get_status(self):
         device = self.get_device()
