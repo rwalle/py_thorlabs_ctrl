@@ -2,7 +2,7 @@ import py_thorlabs_ctrl.kinesis
 import clr, time
 
 POLLING_INTERVAL = 250
-ENABLE_SLEEP_TIME = 0.1
+ENABLE_SLEEP_TIME = 0.2
 
 py_thorlabs_ctrl.kinesis.check_import()
   
@@ -74,10 +74,10 @@ class Motor:
 
     def get_position(self):
         device = self.get_device()
-        print("GetPositionCounter: {}".format(device.GetPositionCounter))        
-        print("DevicePosition: {}".format(device.DevicePosition))
+        # print("GetPositionCounter: {}".format(device.GetPositionCounter))        
+        # print("DevicePosition: {}".format(device.DevicePosition))
         print("Position: {}".format(device.Position))
-        print("Position_DeviceUnit: {}".format(int(device.Position_DeviceUnit)))
+        # print("Position_DeviceUnit: {}".format(int(device.Position_DeviceUnit)))
         return Decimal.ToDouble(device.DevicePosition)
 
     def get_max_velocity_du(self):
@@ -120,7 +120,7 @@ class Motor:
     def stop(self):
         device = self.get_device()
         device.Stop(0)
-    
+
     def stop_immediate(self):
         device = self.get_device()
         device.StopImmediate()
@@ -134,32 +134,45 @@ class Motor:
                 device.MoveContinuousAtVelocity(MotorDirection.Forward,abs(vel))
         except Exception as e:
             print(e)
-
+### Move statements that pause the code until the previous statement has exectued then they execute ###
+#     def move_relative(self,dis):
+#         temp = True
+#         device = self.get_device()
+#         device.SetMoveRelativeDistance(Decimal(dis))
+#         while temp == True:
+#             try:
+#                 device.MoveRelative(0)
+#                 temp = False
+#                 print(temp)
+#             except Exception as e:
+#                 print(e)
+# 
+#     def move_absolute(self,pos):
+#         device = self.get_device()
+#         temp = True
+#         while temp == True:
+#             try:
+#                 device.MoveTo(Decimal(pos),0)
+#                 temp = False
+#             except Exception as e:
+#                 print(e)
+# 
     def move_relative(self,dis):
-        temp = True
         device = self.get_device()
+        device.StopImmediate()
         device.SetMoveRelativeDistance(Decimal(dis))
-        while temp == True:
-            try:
-                device.MoveRelative(0)
-                temp = False
-                print(temp)
-            except Exception as e:
-                print(e)
+        time.sleep(ENABLE_SLEEP_TIME) 
+        device.MoveRelative(0)
 
-    def move_absolute(self, pos):
+    def move_absolute(self,pos):
         device = self.get_device()
-        temp = True
-        while temp == True:
-            try:
-                device.MoveTo(Decimal(pos),0)
-                temp = False
-            except Exception as e:
-                print(e)
+        device.StopImmediate()
+        time.sleep(ENABLE_SLEEP_TIME)
+        device.MoveTo(Decimal(pos),0)
 
     def get_status(self):
         device = self.get_device()
-        return device.Status.IsMoving()
+        return device.Status.IsMoving
         
     def disable(self):
         device = self.get_device()
