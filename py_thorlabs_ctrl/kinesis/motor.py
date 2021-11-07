@@ -2,7 +2,7 @@ import py_thorlabs_ctrl.kinesis
 import clr, time
 
 POLLING_INTERVAL = 250
-ENABLE_SLEEP_TIME = 0.2
+ENABLE_SLEEP_TIME = 0.1
 
 py_thorlabs_ctrl.kinesis.check_import()
   
@@ -30,6 +30,8 @@ class Motor:
     """
 
     INIT_TIMEOUT = 5000
+    max_velocity = Decimal(2.2)
+    max_acceleration = Decimal(1.0)
 
     def __init__(self, serial_number):
         self.serial_number = str(serial_number)
@@ -49,23 +51,23 @@ class Motor:
 
     def enable(self):
         device = self.get_device()
-
         device.Connect(self.serial_number)
-
         if not device.IsSettingsInitialized():
             device.WaitForSettingsInitialized(self.INIT_TIMEOUT)
-            
         device.StartPolling(POLLING_INTERVAL)
         time.sleep(ENABLE_SLEEP_TIME)
         device.EnableDevice()
         time.sleep(ENABLE_SLEEP_TIME)
-
         device.LoadMotorConfiguration(self.serial_number)
         
     def get_serial_number(self):
         device = self.get_device()
         device_info = device.GetDeviceInfo()
         return device_info.SerialNumber
+
+    def get_homing_velocity(self):
+        device = self.get_device()
+        return device.GetHomingVelocity()
         
     def get_name(self):
         device = self.get_device()
@@ -74,10 +76,6 @@ class Motor:
 
     def get_position(self):
         device = self.get_device()
-        # print("GetPositionCounter: {}".format(device.GetPositionCounter))        
-        # print("DevicePosition: {}".format(device.DevicePosition))
-        print("Position: {}".format(device.Position))
-        # print("Position_DeviceUnit: {}".format(int(device.Position_DeviceUnit)))
         return Decimal.ToDouble(device.DevicePosition)
 
     def get_max_velocity_du(self):
@@ -85,36 +83,28 @@ class Motor:
         params = device.GetVelocityParams_DeviceUnit()
         return params.MaxVelocity
 
-    def mm_to_du(self):  # unsure whether this is a constant for all motors, but this method may not work for all devices
-        device = self.get_device()
-        return int(Decimal.ToDouble(device.GetMoveAbsolutePosition()))
-
     def get_position_du(self):
         device = self.get_device()
         return device.GetPositionCounter()
 
-    def print_velocity(self):
-        device = self.get_device()
-        real_params = device.GetVelocityParams() # velocity parameters in real units (mm)
-        device_params = device.GetVelocityParams_DeviceUnit() # velocity parameters in device units 
-        print("velocity (real world units): {}".format(Decimal.ToDouble(real_params.MaxVelocity)))
-        print("velocity (device units: {}".format(device_params.MaxVelocity))
-        print("conversion: {}".format(device_params.MaxVelocity/Decimal.ToDouble(real_params.MaxVelocity)))
-        
-    def set_velocity(self, max_velocity = None, acceleration = None):
+    def get_velocity(self):
         device = self.get_device()
         params = device.GetVelocityParams()
-        max_velocity = Decimal.ToDouble(params.MaxVelocity) if max_velocity == None else max_velocity
-        acceleration = Decimal.ToDouble(params.Acceleration) if acceleration == None else acceleration
-        device.SetVelocityParams(Decimal(max_velocity), Decimal(acceleration))
+        velocity = Decimal.ToDouble(params.MaxVelocity)
+        acceleration = Decimal.ToDouble(params.Acceleration)
+        return velocity
+        
+    def set_velocity(self, velocity = max_velocity, acceleration = max_acceleration):
+        device = self.get_device()
+        device.SetVelocityParams(velocity, acceleration)
         
     def is_homed(self):
         device = self.get_device()
         return device.Status.IsHomed
 
-
     def home(self):
         device = self.get_device()
+        device.SetHomingVelocity(max_velocity)
         device.Home(0)
 
     def stop(self):
@@ -140,7 +130,7 @@ class Motor:
 #         device = self.get_device()
 #         device.SetMoveRelativeDistance(Decimal(dis))
 #         while temp == True:
-#             try:
+#            itry:
 #                 device.MoveRelative(0)
 #                 temp = False
 #                 print(temp)
@@ -161,12 +151,15 @@ class Motor:
         device = self.get_device()
         device.StopImmediate()
         device.SetMoveRelativeDistance(Decimal(dis))
-        time.sleep(ENABLE_SLEEP_TIME) 
+        time.sleep(ENABLE_SLEEP_TIME)
+        device.SetVelocityParams(self.max_velocity,self.max_acceleration)
         device.MoveRelative(0)
 
     def move_absolute(self,pos):
         device = self.get_device()
         device.StopImmediate()
+        params = device.GetVelocityParams()
+        device.SetVelocityParams(self.max_velocity,self.max_acceleration)
         time.sleep(ENABLE_SLEEP_TIME)
         device.MoveTo(Decimal(pos),0)
 
