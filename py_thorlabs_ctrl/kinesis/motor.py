@@ -164,7 +164,7 @@ class Motor:
         time.sleep(ENABLE_SLEEP_TIME)
         if (self.buffer < pos) and (pos < self.max_range()-self.buffer):
             try:
-                device.MoveTo(Decmial(pos),0)
+                device.MoveTo(Decimal(pos),0)
             except Exception as e:
                 print(e)
         else:
