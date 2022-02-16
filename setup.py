@@ -1,4 +1,4 @@
-import setuptools
+iport setuptools
 
 setuptools.setup(name='py_thorlabs_ctrl',
     version='0.1',
